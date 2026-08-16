@@ -142,44 +142,48 @@ Datos:
 - Procesos cerrados con 0-1 oferentes reales: ${stats.bajaCompetencia.length}
 - Adjudicaciones sin variación respecto al presupuesto: ${stats.sinNegociacion.length}
 - Procesos cancelados: ${stats.cancelados.length}${
-    stats.cancelados[0] ? ` (el mayor: ${stats.cancelados[0].entidad}, ${fmtCOP(stats.cancelados[0].valor)})` : ""
+    stats.cancelados[0]
+      ? ` (el mayor: ${stats.cancelados[0].entidad}, ${fmtCOP(stats.cancelados[0].valor)})`
+      : ""
   }
-- Top 5 por valor: ${stats.top5.map((c) => `${c.entidad} — ${fmtCOP(c.valor)}`).join("; ")}`;
+- Top 5 por valor: ${stats.top5
+    .map((c) => `${c.entidad} — ${fmtCOP(c.valor)}`)
+    .join("; ")}`;
 
   const res = await fetch(
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [
-            {
-              text: prompt,
-            },
-          ],
-        },
-      ],
-      generationConfig: {
-        maxOutputTokens: 300,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    }),
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          maxOutputTokens: 300,
+        },
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(`Gemini API error: ${res.status} ${await res.text()}`);
   }
-);
 
-if (!res.ok) {
-  throw new Error(`Gemini API error: ${res.status} ${await res.text()}`);
-}
+  const data = await res.json();
 
-const data = await res.json();
-
-return (
-  data.candidates?.[0]?.content?.parts?.[0]?.text ??
-  "(sin resumen)"
-);
+  return (
+    data.candidates?.[0]?.content?.parts?.[0]?.text ??
+    "(sin resumen)"
+  );
 }
 
 function formatMessage(stats, summary) {
