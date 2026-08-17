@@ -3,13 +3,13 @@
  * Weekly SECOP II report — Cauca procurement watch
  *
  * Fetches new procurement processes from the last 7 days, aggregates them
- * with real irregularity indicators, asks Claude for a short executive
+ * with real irregularity indicators, asks gemini for a short executive
  * summary, and sends a nicely formatted report to Telegram.
  *
  * Place this at: scripts/secop-report.mjs
  *
  * Required env vars:
- *   ANTHROPIC_API_KEY
+ *   GEMINI_API_KEY
  *   TELEGRAM_BOT_TOKEN
  *   TELEGRAM_CHAT_ID
  * Optional:
@@ -35,6 +35,8 @@ const FIELD_FASE = "fase";
 const FIELD_ESTADO = "estado_del_procedimiento";
 
 const HIGH_VALUE_THRESHOLD_COP = 500_000_000;
+
+const MODEL = "gemini-3.5-flash-lite";
 
 function sevenDaysAgoISO() {
   const d = new Date();
@@ -150,8 +152,9 @@ Datos:
     .map((c) => `${c.entidad} — ${fmtCOP(c.valor)}`)
     .join("; ")}`;
 
+
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`,
     {
       method: "POST",
       headers: {
